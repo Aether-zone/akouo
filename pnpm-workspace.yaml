@@ -1,0 +1,19 @@
+packages:
+  - 'packages/*'
+  - 'api'
+  - 'contract'
+  - 'web'
+  - 'desktop'
+
+# pnpm 10 runs no dependency lifecycle scripts unless they are named here.
+# better-sqlite3 compiles native bindings; without its script the api installs
+# cleanly and boots to "No native build was found".
+onlyBuiltDependencies:
+  - '@swc/core'
+  # electron's postinstall downloads the binary the desktop app runs on.
+  - electron
+  - better-sqlite3
+  - esbuild
+  - sharp
+  - unrs-resolver
+

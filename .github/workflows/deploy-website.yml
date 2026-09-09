@@ -1,0 +1,46 @@
+name: Deploy website
+
+# Builds apps/website and publishes the static output to the `gh-pages` branch,
+# which can then be selected as the GitHub Pages source
+# (Settings → Pages → Branch: gh-pages / root).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/website/**"
+      - "packages/**"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/deploy-website.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-website
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter @akouo/website build
+
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: apps/website/dist
+          publish_branch: gh-pages
+          force_orphan: true

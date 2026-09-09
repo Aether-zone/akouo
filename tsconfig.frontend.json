@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "akouo frontend base",
+  "_comment": [
+    "Shared compiler options for the frontend: web/* and the packages/* libraries.",
+    "Named `frontend` rather than `base` because tsconfig.base.json at this root",
+    "already belongs to the Nest side, and those two want opposite things \u2014",
+    "this one sets noEmit, that one composite + emitDeclarationOnly."
+  ],
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": [
+      "ES2022"
+    ],
+    "types": [],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "noEmit": true
+  }
+}

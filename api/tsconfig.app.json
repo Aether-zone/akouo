@@ -1,0 +1,103 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ],
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "target": "es2023",
+    "strict": false,
+    "strictNullChecks": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "noUnusedLocals": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "emitDeclarationOnly": false,
+    "noEmit": true,
+    "paths": {
+      "@akouo/ai": [
+        "./libs/ai/src/index.ts"
+      ],
+      "@akouo/ai/*": [
+        "./libs/ai/src/*"
+      ],
+      "@akouo/common": [
+        "./libs/common/src/index.ts"
+      ],
+      "@akouo/common/*": [
+        "./libs/common/src/*"
+      ],
+      "@akouo/embedding": [
+        "./libs/embedding/src/index.ts"
+      ],
+      "@akouo/embedding/*": [
+        "./libs/embedding/src/*"
+      ],
+      "@akouo/extraction": [
+        "./libs/extraction/src/index.ts"
+      ],
+      "@akouo/extraction/*": [
+        "./libs/extraction/src/*"
+      ],
+      "@akouo/meeting": [
+        "./libs/meeting/src/index.ts"
+      ],
+      "@akouo/meeting/*": [
+        "./libs/meeting/src/*"
+      ],
+      "@akouo/person": [
+        "./libs/person/src/index.ts"
+      ],
+      "@akouo/person/*": [
+        "./libs/person/src/*"
+      ],
+      "@akouo/recording": [
+        "./libs/recording/src/index.ts"
+      ],
+      "@akouo/recording/*": [
+        "./libs/recording/src/*"
+      ],
+      "@akouo/search": [
+        "./libs/search/src/index.ts"
+      ],
+      "@akouo/search/*": [
+        "./libs/search/src/*"
+      ],
+      "@akouo/template": [
+        "./libs/template/src/index.ts"
+      ],
+      "@akouo/template/*": [
+        "./libs/template/src/*"
+      ],
+      "@akouo/transcription": [
+        "./libs/transcription/src/index.ts"
+      ],
+      "@akouo/transcription/*": [
+        "./libs/transcription/src/*"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "libs/**/*.ts"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "test",
+    "jest.config.ts",
+    "jest.config.cts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "libs/**/*.spec.ts",
+    "libs/**/*.test.ts",
+    "eslint.config.js",
+    "eslint.config.cjs",
+    "eslint.config.mjs"
+  ]
+}

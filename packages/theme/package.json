@@ -1,0 +1,28 @@
+{
+  "name": "@akouo/theme",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./preset": "./preset.ts",
+    "./css": "./akouo-theme.css"
+  },
+  "files": [
+    "index.ts",
+    "preset.ts",
+    "akouo-theme.css"
+  ],
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aether-zone/kosmos": "^0.3.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.17.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.7.3"
+  }
+}

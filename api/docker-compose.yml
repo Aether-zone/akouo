@@ -1,0 +1,36 @@
+name: akouo
+
+services:
+    # Postgres with pgvector, for the embeddings the application stores and
+    # searches. 5432 is already in use on this machine, so the container maps to
+    # 5442.
+    postgres:
+        image: pgvector/pgvector:pg17
+        container_name: akouo-postgres
+        environment:
+            POSTGRES_USER: ${POSTGRES_USER:-akouo}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Ch4nG3M3!}
+            POSTGRES_DB: ${POSTGRES_DB:-akouo}
+        ports:
+            - '${POSTGRES_PORT:-5442}:5432'
+        volumes:
+            - postgres-data:/var/lib/postgresql/data
+            # Enables the extension on first boot; ignored on later starts.
+            - ./docker/postgres/init-pgvector.sql:/docker-entrypoint-initdb.d/init-pgvector.sql:ro
+        healthcheck:
+            test:
+                [
+                    'CMD-SHELL',
+                    'pg_isready -U ${POSTGRES_USER:-akouo} -d ${POSTGRES_DB:-akouo}',
+                ]
+            interval: 5s
+            timeout: 5s
+            retries: 12
+            start_period: 5s
+        restart: unless-stopped
+
+
+# Only what akouo alone uses. The object store and the broker are shared, and
+# live in the workspace root's docker-compose.yml.
+volumes:
+    postgres-data:
