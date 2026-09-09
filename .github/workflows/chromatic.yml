@@ -1,0 +1,46 @@
+name: Chromatic
+
+# Publish the @akouo/ui Storybook to Chromatic for visual review on every push.
+# Chromatic uses git history to diff against the last accepted baseline, so the
+# checkout below must be unshallow (fetch-depth: 0).
+
+on:
+  push:
+  workflow_dispatch:
+
+# One in-flight run per branch; cancel superseded pushes.
+concurrency:
+  group: chromatic-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  chromatic:
+    name: Publish to Chromatic
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Publish to Chromatic
+        uses: chromaui/action@latest
+        with:
+          projectToken: ${{ secrets.CHROMATIC_KEY }}
+          workingDir: packages/ui
+          buildScriptName: build-storybook
+          # Don't fail the workflow on detected visual changes — review and
+          # accept them in the Chromatic UI instead.
+          exitZeroOnChanges: true

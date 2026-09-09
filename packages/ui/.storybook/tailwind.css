@@ -1,0 +1,6 @@
+/* Storybook canvas styles — same wiring the apps use, so stories render with
+   the real Akouo tokens. */
+@import "@akouo/theme/css";
+
+/* The theme toggles dark mode on the `.dark` class, not the OS preference. */
+@custom-variant dark (&:where(.dark, .dark *));

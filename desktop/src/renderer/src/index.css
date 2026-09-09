@@ -1,0 +1,8 @@
+/* Akouo design tokens (Tailwind v4 layer) live in @akouo/theme. */
+@import "@akouo/theme/css";
+
+/* The theme toggles dark mode on the `.dark` class, not the OS preference. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Extend the shared preset (darkMode + token names) for this app. */
+@config "../../../tailwind.config.ts";
