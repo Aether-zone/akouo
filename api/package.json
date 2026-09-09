@@ -12,7 +12,7 @@
     "test": "jest --config jest.config.json"
   },
   "dependencies": {
-    "@aether-zone/organon": "file:../../organon/libs/organon",
+    "@aether-zone/organon": "^0.5.0",
     "@ai-sdk/openai": "^4.0.46",
     "@ai-sdk/provider": "^4.0.7",
     "@akouo/contract": "workspace:*",
