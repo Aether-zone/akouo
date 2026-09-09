@@ -1,7 +1,3 @@
-import { z } from 'zod';
-
-import { meetingSchema } from '../meeting';
-
 /**
  * Routing keys akouo publishes under.
  *
@@ -11,20 +7,28 @@ import { meetingSchema } from '../meeting';
  * and nothing arrives.
  */
 export const MEETING_CREATED = 'meeting.created';
+export const MEETING_UPDATED = 'meeting.updated';
+export const MEETING_DELETED = 'meeting.deleted';
 
 /**
- * A meeting now exists.
+ * What akouo puts in an event's `source`.
  *
- * Carries the whole {@link meetingSchema}, not just an id. A subscriber in
- * another service cannot read akouo's database, and one that could would be
- * reading a row that has moved on since the event was sent. What is in here is
- * what was true when it happened, which is what an event is for.
- *
- * The envelope — `id`, `occurredAt`, `accessToken` — is organon's `RabbitEvent`
- * and is added by its publisher, so it is deliberately not repeated here.
+ * An IRI rather than the bare name, because `source` identifies the producer
+ * across the whole workspace and a bare word is only unique by luck.
  */
-export const meetingCreatedSchema = z.object({
-  meeting: meetingSchema,
-});
+export const AETHER_SOURCE = 'https://aether.zone/akouo';
 
-export type MeetingCreatedEvent = z.infer<typeof meetingCreatedSchema>;
+/*
+ * The body of a meeting event is organon's `AetherEvent<Meeting>`, where
+ * `Meeting` is the JSON-LD document in `meeting.json-ld.ts` — not `MeetingDTO`.
+ *
+ * That is deliberate. `MeetingDTO` is akouo's HTTP shape: audit columns, an
+ * `organizationId`, a status enum only akouo acts on. Putting it on the bus
+ * would make every consumer depend on akouo's api and on its idea of what a
+ * meeting is. The JSON-LD document says the same things in a vocabulary
+ * anything can read, keyed by an IRI a graph store can relate to a person or a
+ * recording without knowing where either came from.
+ *
+ * The envelope — `id`, `time`, `source`, `subject`, `actor` — is the Aether
+ * event's own, and organon's `aetherEventSchema` is what validates it.
+ */

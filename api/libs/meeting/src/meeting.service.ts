@@ -1,18 +1,26 @@
 import {
+  AETHER_SOURCE,
   CreateMeetingDTO,
   MEETING_CREATED,
+  MEETING_DELETED,
+  MEETING_UPDATED,
   MeetingDTO,
   UpdateMeetingDTO,
   fromIsoDateTime,
 } from '@akouo/contract';
-import type { MeetingCreatedEvent } from '@akouo/contract';
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { Repository } from 'typeorm';
 
 import { EventPublisher } from '@aether-zone/organon';
-import type { Actor } from '@aether-zone/organon';
+import type { Actor, AetherEvent } from '@aether-zone/organon';
 
 import { Meeting } from './meeting.entity';
+import {
+  meetingIri,
+  toMeetingDocument,
+  type MeetingJsonLD,
+} from './meeting.json-ld';
 import { MeetingMapper } from './meeting.mapper';
 import { Participant } from './participant/participant.entity';
 import { Person } from '@akouo/person/person.entity';
@@ -29,28 +37,53 @@ export class MeetingService {
   ) { }
 
   /**
-   * Announces the new meeting, without letting the broker fail the request.
+   * Announces what happened to a meeting, without letting the broker fail the
+   * request.
    *
-   * The meeting is already saved by the time this runs, and a caller who has
-   * just created one should not be told it failed because a queue was down.
-   * What is lost is the work that follows — so the failure is logged loudly
-   * rather than swallowed quietly, and the row is still there to replay from.
+   * The row is already written by the time this runs, and a caller who has just
+   * created or changed a meeting should not be told it failed because a queue
+   * was down. What is lost is the work that follows — so the failure is logged
+   * loudly rather than swallowed quietly, and the row is still there to replay
+   * from.
    *
    * The honest fix for that gap is an outbox: write the event in the same
    * transaction as the row and let a relay publish it. That is a bigger change
-   * than a first event warrants, and this comment is where to start it.
+   * than these events warrant, and this comment is where to start it.
    */
-  private async publishCreated(meeting: MeetingDTO): Promise<void> {
-    const event: MeetingCreatedEvent = { meeting };
-
+  private async publish(
+    event: AetherEvent<MeetingJsonLD>,
+    routingKey: string,
+  ): Promise<void> {
     try {
-      await this.events.publish(MEETING_CREATED, event);
+      await this.events.publish(routingKey, event);
     } catch (cause) {
       this.logger.error(
-        `Meeting "${meeting.id}" was created but "${MEETING_CREATED}" could not be published`,
+        `Meeting "${event.subject}" changed but "${routingKey}" could not be published`,
         cause,
       );
     }
+  }
+
+  /**
+   * The envelope every meeting event shares.
+   *
+   * `subject` is the meeting's IRI and, on a create or update, must equal the
+   * document's `@id` — organon's schema refuses an event where the two
+   * disagree, because they are the same fact stated twice and a consumer would
+   * file the document under the wrong node.
+   *
+   * `time` is an ISO 8601 string, not a Date: an event crosses a process
+   * boundary as JSON, where a Date arrives as a string anyway.
+   */
+  private envelope(user: Actor, id: string) {
+    return {
+      id: randomUUID(),
+      source: AETHER_SOURCE,
+      time: new Date().toISOString(),
+      subject: meetingIri(id),
+      organizationId: user.organizationId,
+      actor: { id: user.id, type: 'User' },
+    };
   }
 
   async findAll(user: Actor): Promise<MeetingDTO[]> {
@@ -124,7 +157,14 @@ export class MeetingService {
       await this.loadMeeting(user, saved.id),
     );
 
-    await this.publishCreated(created);
+    await this.publish(
+      {
+        ...this.envelope(user, created.id),
+        type: 'aether:ResourceCreated',
+        data: toMeetingDocument(created),
+      },
+      MEETING_CREATED,
+    );
 
     return created;
   }
@@ -164,7 +204,23 @@ export class MeetingService {
 
     await this.meetingRepository.save(entity);
 
-    return this.meetingMapper.toDTO(await this.loadMeeting(user, id));
+    const updated = this.meetingMapper.toDTO(await this.loadMeeting(user, id));
+
+    /*
+     * The whole meeting, not the fields that moved. A consumer holding a graph
+     * wants the resource as it now stands; a patch would make it reconstruct
+     * that itself, from a base it may never have seen.
+     */
+    await this.publish(
+      {
+        ...this.envelope(user, id),
+        type: 'aether:ResourceUpdated',
+        data: toMeetingDocument(updated),
+      },
+      MEETING_UPDATED,
+    );
+
+    return updated;
   }
 
   /**
@@ -203,6 +259,16 @@ export class MeetingService {
   /** Removing someone else's meeting is an administrative act, so it needs admin or owner. */
   async delete(user: Actor, id: string): Promise<void> {
     await this.meetingRepository.remove(await this.loadMeeting(user, id));
+
+    /*
+     * No `data`: the resource is gone, and there is nothing left to describe.
+     * `subject` is all a consumer needs to drop what it holds — which is why
+     * organon's schema refuses a delete that carries a document.
+     */
+    await this.publish(
+      { ...this.envelope(user, id), type: 'aether:ResourceDeleted' },
+      MEETING_DELETED,
+    );
   }
 
   private async loadMeeting(user: Actor, id: string): Promise<Meeting> {
