@@ -1,20 +1,17 @@
-import { MeetingDTO, PersonDTO, createPersonSchema } from '@akouo/contract';
-import type { CreatePersonDTO } from '@akouo/contract';
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { MeetingDTO, PersonDTO } from '@akouo/contract';
+import { Controller, Get, Param, ParseUUIDPipe, UseGuards } from '@nestjs/common';
 import { CurrentActor, OrganizationGuard, type Actor } from '@aether-zone/organon';
-import { ZodValidationPipe } from '@akouo/common';
 
 import { PersonService } from './person.service';
 import { MeetingService } from '@akouo/meeting';
+
+/*
+ * Read-only. People are not created or deleted through akouo any more: they
+ * arrive from prosopone as `aether:ResourceCreated` events and are recorded by
+ * `PersonListener`. The write endpoints are gone rather than deprecated,
+ * because two ways in would let akouo hold a person prosopone has never heard
+ * of — and nothing would reconcile them.
+ */
 
 @Controller('organizations/:organizationId/persons')
 @UseGuards(OrganizationGuard)
@@ -32,22 +29,6 @@ export class PersonController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<PersonDTO> {
     return this.personService.findById(user, id);
-  }
-
-  @Post()
-  createPerson(
-    @CurrentActor() user: Actor,
-    @Body(new ZodValidationPipe(createPersonSchema)) person: CreatePersonDTO,
-  ): Promise<PersonDTO> {
-    return this.personService.create(user, person);
-  }
-
-  @Delete('/:id')
-  deletePerson(
-    @CurrentActor() user: Actor,
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<void> {
-    return this.personService.delete(user, id);
   }
 
   @Get('/:id/meetings')

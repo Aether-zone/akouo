@@ -18,6 +18,7 @@ import { RabbitMqModule } from '@aether-zone/organon';
 import { AIModule } from '@akouo/ai';
 
 import { EmbeddingModule } from '@akouo/embedding';
+import { LocationModule, locationEntities } from '@akouo/location';
 import { ExtractionModule, extractionEntities } from '@akouo/extraction';
 import { MeetingModule, meetingEntities } from '@akouo/meeting';
 import { PersonModule, personEntities } from '@akouo/person';
@@ -60,6 +61,7 @@ import {
       [
         ...commonEntities,
         ...extractionEntities,
+        ...locationEntities,
         ...meetingEntities,
         ...personEntities,
         ...recordingEntities,
@@ -144,6 +146,7 @@ import {
     }),
     EmbeddingModule,
     ExtractionModule,
+    LocationModule,
     MeetingModule,
     PersonModule,
     RecordingModule,
