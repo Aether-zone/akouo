@@ -25,6 +25,8 @@ export async function saveMeeting(input: {
     /** "YYYY-MM-DD HH:MM", built in the browser so the zone is the user's. */
     startDate: string;
     personIds: string[];
+    /** `null` means "nowhere", which is a choice; it is never absent here. */
+    locationId?: string | null;
 }): Promise<SaveMeetingResult> {
     const title = input.title.trim();
 
@@ -42,11 +44,16 @@ export async function saveMeeting(input: {
               title,
               startDate: input.startDate,
               participants,
+              // `?? null` rather than leaving it out: the modal always knows
+              // whether a location is set, so an edit that cleared one has to
+              // say so — absent would mean "leave it alone".
+              locationId: input.locationId ?? null,
           })
         : await createMeeting({
               title,
               startDate: input.startDate,
               participants,
+              locationId: input.locationId ?? null,
           });
 
     if (!result.ok) {
@@ -88,6 +95,8 @@ export async function scheduleMeeting(input: {
     /** "YYYY-MM-DD HH:MM", built in the browser so the zone is the user's. */
     startDate: string;
     personIds: string[];
+    /** Where it happened, or null. */
+    locationId?: string | null;
 }): Promise<ScheduleMeetingResult> {
     const title = input.title.trim();
 
@@ -102,6 +111,7 @@ export async function scheduleMeeting(input: {
         title,
         startDate: input.startDate,
         participants: input.personIds.map((personId) => ({ personId })),
+        locationId: input.locationId ?? null,
     });
 
     if (!result.ok) {

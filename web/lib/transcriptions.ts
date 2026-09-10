@@ -7,6 +7,15 @@ import { apiGet, apiPut, type ApiPostFailure, type ApiResult } from "./api";
  * Utterances are the same words split into turns; they come back with the
  * transcription and are typed loosely here until something renders them.
  */
+/**
+ * Whether words are still as a transcriber produced them.
+ *
+ * Declared here rather than imported from `@akouo/contract`, which this app
+ * does not depend on — the console keeps its own loose shapes for what the api
+ * returns, and this is one value of an enum it will not quietly widen.
+ */
+export type ContentOrigin = "TRANSCRIBED" | "MANUAL";
+
 export type Utterance = {
     id?: string;
     transcriptionId?: string;
@@ -16,14 +25,14 @@ export type Utterance = {
     confidence?: number;
     start?: number;
     end?: number;
-    origin?: "TRANSCRIBED" | "MANUAL";
+    origin?: ContentOrigin;
 };
 
 export type Transcription = {
     id?: string;
     recordingId?: string;
     content?: string;
-    origin?: "TRANSCRIBED" | "MANUAL";
+    origin?: ContentOrigin;
     utterances?: Utterance[];
     createdAt?: string;
     updatedAt?: string;

@@ -7,7 +7,7 @@ import {
 import { aetherEventSchema } from '@aether-zone/organon';
 
 import { MeetingService } from './meeting.service';
-import { meetingIri, personIri } from './meeting.json-ld';
+import { meetingIri } from './meeting.json-ld';
 
 const actor = { id: 'user-1', organizationId: 'org-1' } as never;
 const request = {
@@ -24,11 +24,37 @@ const meeting = {
   endDate: '2026-01-01T09:30:00Z',
   status: 'INITIAL',
   participants: [
-    { id: 'participation-1', meetingId: 'meeting-1', personId: 'person-1' },
+    {
+      id: 'participation-1',
+      meetingId: 'meeting-1',
+      // akouo's own row id for the person…
+      personId: 'person-1',
+      // …and the IRI the workspace knows them by, which is what prosopone
+      // announced. The two are different identifiers for the same human, and
+      // only the second belongs in a published document.
+      personUri: 'urn:aether:person:from-prosopone',
+    },
   ],
 };
 
-function harness(publish = jest.fn().mockResolvedValue(undefined)) {
+/**
+ * People the meeting service will find when it checks who may be added.
+ *
+ * `sourceUri` non-null means prosopone still knows them, which is the whole of
+ * the rule — see `MeetingService.refuseUnlinked`.
+ */
+const KNOWN_PEOPLE = [
+  {
+    id: 'person-1',
+    name: 'Ada Lovelace',
+    sourceUri: 'urn:aether:person:from-prosopone',
+  },
+];
+
+function harness(
+  publish = jest.fn().mockResolvedValue(undefined),
+  people: { id: string; name: string; sourceUri: string | null }[] = KNOWN_PEOPLE,
+) {
   const built = {
     leftJoinAndSelect: () => built,
     where: () => built,
@@ -43,14 +69,23 @@ function harness(publish = jest.fn().mockResolvedValue(undefined)) {
     createQueryBuilder: () => built,
   };
   const meetingMapper = { toDTO: () => meeting };
+  const personRepository = {
+    find: jest.fn().mockResolvedValue(people),
+  };
+  /* Meetings resolve their location through the service, not a repository. */
+  const locations = {
+    findById: jest.fn().mockResolvedValue(null),
+  };
 
   const service = new MeetingService(
     meetingRepository as never,
+    personRepository as never,
+    locations as never,
     meetingMapper as never,
     { publish } as never,
   );
 
-  return { service, publish, meetingRepository };
+  return { service, publish, meetingRepository, personRepository, locations };
 }
 
 /** The event a call published, with the routing key it went out under. */
@@ -110,7 +145,16 @@ describe('create', () => {
       .participations as unknown as Record<string, unknown>[];
 
     expect(participation['@type']).toBe('aether:Participation');
-    expect(participation.participant).toEqual({ '@id': personIri('person-1') });
+    /*
+     * The person's *own* IRI, not one derived from akouo's row id. Deriving
+     * one used to produce a second node for the same human, so a meeting
+     * referenced a participant that existed nowhere else — beside the real
+     * person, whom nothing linked to.
+     */
+    expect(participation.participant).toEqual({
+      '@id': 'urn:aether:person:from-prosopone',
+    });
+    expect(JSON.stringify(participation)).not.toContain('person-1');
   });
 
   it('still returns the meeting when the broker is down', async () => {
@@ -237,5 +281,125 @@ describe('every event satisfies organon’s schema', () => {
     const { event } = published(publish);
 
     expect(event.subject).toBe((event.data as Record<string, unknown>)['@id']);
+  });
+});
+
+describe('who may be added to a meeting', () => {
+  /* The create fixture above has no participants; these need one. */
+  const withAda = { ...request, participants: [{ personId: 'person-1' }] };
+
+  it('accepts someone prosopone still knows', async () => {
+    const { service, publish, personRepository } = harness();
+
+    await service.create(actor, withAda as never);
+
+    expect(personRepository.find).toHaveBeenCalled();
+    expect(publish).toHaveBeenCalled();
+  });
+
+  it('refuses someone prosopone has deleted', async () => {
+    /*
+     * `sourceUri` null means akouo can no longer name them. A participation
+     * referencing such a person is dropped from the published document, so the
+     * meeting would go out with the attendee silently missing — better to
+     * refuse the request than to quietly lose them.
+     */
+    const { service, publish } = harness(undefined, [
+      { id: 'person-1', name: 'Ada Lovelace', sourceUri: null },
+    ]);
+
+    await expect(service.create(actor, withAda as never)).rejects.toThrow(
+      /no longer be added/,
+    );
+    // Nothing was saved, so nothing is announced.
+    expect(publish).not.toHaveBeenCalled();
+  });
+
+  it('refuses someone akouo has never heard of', async () => {
+    const { service } = harness(undefined, []);
+
+    await expect(service.create(actor, withAda as never)).rejects.toThrow(
+      /no longer be added/,
+    );
+  });
+
+  it('names who could not be added, so the caller can fix it', async () => {
+    const { service } = harness(undefined, [
+      { id: 'person-1', name: 'Ada Lovelace', sourceUri: null },
+    ]);
+
+    await expect(service.create(actor, withAda as never)).rejects.toMatchObject(
+      {
+        response: {
+          errors: [
+            {
+              path: 'participants',
+              message: expect.stringContaining('Ada Lovelace'),
+            },
+          ],
+        },
+      },
+    );
+  });
+
+  it('checks nobody when a meeting has no participants', async () => {
+    // A query for an empty set is a query worth not making.
+    const { service, personRepository } = harness();
+
+    await service.create(actor, request as never);
+
+    expect(personRepository.find).not.toHaveBeenCalled();
+  });
+});
+
+describe('where a new meeting is', () => {
+  const withLocation = {
+    ...request,
+    participants: [],
+    locationId: 'a-real-location',
+  };
+
+  it('resolves the location the caller named', async () => {
+    // Both dialogs send `locationId`: the scheduling modal and the upload
+    // dialog, which creates a meeting before it attaches the recording.
+    const { service, locations } = harness();
+
+    locations.findById.mockResolvedValue({
+      id: 'a-real-location',
+      name: 'Het Sieraad',
+      uri: 'urn:aether:place:pl1',
+    });
+
+    await service.create(actor, withLocation as never);
+
+    expect(locations.findById).toHaveBeenCalledWith(
+      actor.organizationId,
+      'a-real-location',
+    );
+  });
+
+  it('refuses an id this organization does not have', async () => {
+    /*
+     * A 400 rather than a silent null: the caller asked for somewhere
+     * specific, and a meeting quietly filed as nowhere is worse than being
+     * told the id was wrong. It is also the only thing standing between a
+     * guessed id and another tenant's location.
+     */
+    const { service, publish } = harness();
+
+    await expect(service.create(actor, withLocation as never)).rejects.toThrow(
+      /does not exist in this organization/,
+    );
+    expect(publish).not.toHaveBeenCalled();
+  });
+
+  it('looks nothing up when no location was named', async () => {
+    // Most meetings are nowhere — a call is not somewhere — so this must not
+    // cost a query.
+    const { service, locations } = harness();
+
+    await service.create(actor, { ...request, participants: [] } as never);
+
+    expect(locations.findById).not.toHaveBeenCalled();
   });
 });

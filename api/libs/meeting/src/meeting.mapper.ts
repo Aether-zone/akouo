@@ -17,6 +17,11 @@ export class MeetingMapper {
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       status: entity.status,
+      // akouo's own id for the location, not the place IRI: the console uses
+      // it to preselect the autocomplete, and that list is akouo's.
+      locationId: entity.location?.id ?? null,
+      // The place IRI, for the published document. See the note on the schema.
+      locationUri: entity.location?.uri ?? null,
       participants: (entity.participants ?? []).map((participant) =>
         this.participantMapper.toDTO(participant, entity.id),
       ),

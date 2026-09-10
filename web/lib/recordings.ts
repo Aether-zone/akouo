@@ -37,6 +37,18 @@ export type PreparedUpload = {
     expiresAt: string;
 };
 
+/**
+ * How far a stored object has got.
+ *
+ * `INITIAL` is registered but with no bytes behind it yet, `UPLOADING` is in
+ * flight, `UPLOADED` is complete. This *is* the recording's status — a
+ * recording has no state of its own, it is the file it points at.
+ *
+ * It matters beyond display: the api refuses to serve anything that is not
+ * `UPLOADED`, so a recording in either of the other two cannot be played.
+ */
+export type FileStatus = "INITIAL" | "UPLOADING" | "UPLOADED";
+
 /** What the API returns for a recording. `file` is the stored object behind it. */
 export type Recording = {
     id?: string;
@@ -47,6 +59,7 @@ export type Recording = {
         originalName?: string;
         mimeType?: string;
         size?: number;
+        status?: FileStatus;
     };
     createdAt?: string;
     updatedAt?: string;

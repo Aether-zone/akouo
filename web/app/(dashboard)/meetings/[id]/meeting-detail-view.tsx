@@ -6,6 +6,7 @@ import { ScrollArea } from "@akouo/ui";
 import { useState } from "react";
 
 import type { MeetingStatus } from "@/lib/meetings";
+import type { Location } from "@/lib/locations";
 import type { Person } from "@/lib/persons";
 
 import { MeetingStatusBadge } from "../../meeting-status-badge";
@@ -25,6 +26,8 @@ export function MeetingDetailView({
     status,
     startDateValue,
     persons = [],
+    locations = [],
+    locationId = null,
     recordings = [],
     participants = [],
     linkableParticipants = [],
@@ -39,6 +42,9 @@ export function MeetingDetailView({
     startDateValue?: string;
     /** Everyone who could be added as a participant. */
     persons?: Person[];
+    locations?: Location[];
+    /** The meeting's location, so the edit modal opens on it. */
+    locationId?: string | null;
     recordings?: MeetingRecording[];
     participants?: Participant[];
     /** Participants reduced to what attributing a turn needs. */
@@ -82,10 +88,12 @@ export function MeetingDetailView({
                 <div className="flex shrink-0 items-center gap-2">
                     <UpdateMeetingModal
                         persons={persons}
+                        locations={locations}
                         meeting={{
                             id,
                             title,
                             startDate: startDateValue,
+                            locationId,
                             personIds: participants
                                 .map((participant) => participant.personId)
                                 .filter((personId): personId is string =>

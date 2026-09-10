@@ -3,6 +3,7 @@ export * from './lib/oauth';
 export * from './lib/embedding';
 export * from './lib/events';
 export * from './lib/extraction';
+export * from './lib/location';
 export * from './lib/meeting';
 export * from './lib/person';
 export * from './lib/recording';

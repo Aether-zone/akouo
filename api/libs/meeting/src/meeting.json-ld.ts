@@ -26,6 +26,7 @@ export const MEETING_CONTEXT = {
   aether: AETHER_VOCAB,
   participant: 'aether:participant',
   recording: 'aether:recording',
+  location: 'aether:location',
 } as const;
 
 export interface MeetingJsonLD extends JsonLdDocument {
@@ -39,6 +40,20 @@ export interface MeetingJsonLD extends JsonLdDocument {
   participations: ParticipationJsonLD[];
 
   recording?: JsonLdReference;
+
+  /**
+   * Where it is, as the *place's* IRI rather than akouo's row id.
+   *
+   * `urn:aether:place:…` is the node topos announced and arachni already
+   * holds, so a meeting published with this reference joins straight onto it.
+   * Sending akouo's local id would name a node nobody else has — the same
+   * mistake `participant` used to make.
+   *
+   * Absent when the meeting has no location, or when it has one whose place
+   * topos has since deleted: an unlinked location has no IRI to give, and
+   * inventing one would claim a place that is gone.
+   */
+  location?: JsonLdReference;
 }
 
 /**
@@ -69,8 +84,20 @@ export interface ParticipationJsonLD extends JsonLdDocument {
  */
 export const meetingIri = (id: string): string => `urn:aether:meeting:${id}`;
 
-/** The IRI for a person, minted by the same rule. */
-export const personIri = (id: string): string => `urn:aether:person:${id}`;
+/*
+ * There is deliberately no `personIri(id)` here any more.
+ *
+ * It used to mint `urn:aether:person:{akouo local id}`, which was wrong the
+ * moment prosopone started announcing people: the person's IRI is the one the
+ * event carried, and deriving another from akouo's own row id produced a
+ * *second* node for the same human — so a meeting referenced a participant
+ * that existed nowhere else, sitting beside the real person nothing linked to.
+ *
+ * The IRI now travels on `ParticipantDTO.personUri`, decided once in
+ * `@akouo/person`'s `personUri`, which knows whether the person came from
+ * prosopone or predates the stream. A function here taking an id could not
+ * know that, which is why it is gone rather than fixed.
+ */
 
 /** The IRI for one person's presence in one meeting. */
 export const participationIri = (id: string): string =>
@@ -89,12 +116,23 @@ export function toMeetingDocument(meeting: MeetingDTO): MeetingJsonLD {
     '@type': 'aether:Meeting',
     title: meeting.title,
     startTime: meeting.startDate,
+    ...(meeting.locationUri ? { location: { '@id': meeting.locationUri } } : {}),
     ...(meeting.endDate ? { endTime: meeting.endDate } : {}),
-    participations: meeting.participants.map((participant) => ({
-      '@context': MEETING_CONTEXT,
-      '@id': participationIri(participant.id),
-      '@type': 'aether:Participation' as const,
-      participant: { '@id': personIri(participant.personId) },
-    })),
+    /*
+     * Participations without a resolvable person are dropped rather than
+     * published with a missing reference: a participation is a statement that
+     * *someone* was there, and one that cannot say who is not worth a node in
+     * anybody's graph. In practice this only happens when the relation was not
+     * loaded, which is a query bug — and a silently empty participant would
+     * hide it.
+     */
+    participations: meeting.participants
+      .filter((participant) => participant.personUri)
+      .map((participant) => ({
+        '@context': MEETING_CONTEXT,
+        '@id': participationIri(participant.id),
+        '@type': 'aether:Participation' as const,
+        participant: { '@id': participant.personUri! },
+      })),
   };
 }

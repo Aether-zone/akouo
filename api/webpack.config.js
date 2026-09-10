@@ -46,6 +46,7 @@ module.exports = (_env, argv) => {
       '@akouo/common': join(__dirname, 'libs/common/src'),
       '@akouo/embedding': join(__dirname, 'libs/embedding/src'),
       '@akouo/extraction': join(__dirname, 'libs/extraction/src'),
+      '@akouo/location': join(__dirname, 'libs/location/src'),
       '@akouo/meeting': join(__dirname, 'libs/meeting/src'),
       '@akouo/person': join(__dirname, 'libs/person/src'),
       '@akouo/recording': join(__dirname, 'libs/recording/src'),

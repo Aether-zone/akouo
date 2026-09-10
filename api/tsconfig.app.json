@@ -44,6 +44,12 @@
       "@akouo/extraction/*": [
         "./libs/extraction/src/*"
       ],
+      "@akouo/location": [
+        "./libs/location/src/index.ts"
+      ],
+      "@akouo/location/*": [
+        "./libs/location/src/*"
+      ],
       "@akouo/meeting": [
         "./libs/meeting/src/index.ts"
       ],

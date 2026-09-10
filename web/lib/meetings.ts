@@ -29,6 +29,13 @@ export type Meeting = {
     startDate?: string;
     status?: MeetingStatus;
     participants?: MeetingParticipant[];
+    /** akouo's own id for the location, or null. What the modal preselects. */
+    locationId?: string | null;
+    /**
+     * The place IRI the workspace knows that location by. Read-only here — the
+     * console never sends it, and it is null once topos deleted the place.
+     */
+    locationUri?: string | null;
     createdAt?: string;
     updatedAt?: string;
     createdBy?: string;
@@ -46,6 +53,8 @@ export function createMeeting(payload: {
     title: string;
     startDate: string;
     participants: { personId: string }[];
+    /** akouo's own id for the location, or null for nowhere. */
+    locationId?: string | null;
 }): Promise<{ ok: true; data: Meeting } | ApiPostFailure> {
     return apiPost<Meeting>("/meetings", payload);
 }
@@ -72,6 +81,8 @@ export function updateMeeting(
         title?: string;
         startDate?: string;
         participants?: { personId: string }[];
+        /** `null` clears it; absent leaves it as it is. */
+        locationId?: string | null;
     }
 ): Promise<{ ok: true; data: Meeting } | ApiPostFailure> {
     return apiPut<Meeting>(`/meetings/${encodeURIComponent(id)}`, payload);
