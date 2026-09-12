@@ -178,3 +178,45 @@ describe('findByIdInOrganization', () => {
     ).rejects.toThrow(NotFoundException);
   });
 });
+
+/*
+ * The other way in, for loculus's `object.uploaded`. No organization and no id:
+ * an event has neither, and the key is loculus's own — see the method.
+ */
+describe('markUploadedByKey', () => {
+  it('settles the row the key names', async () => {
+    const { service, fileRepository } = harness();
+
+    const settled = await service.markUploadedByKey('abc-a.mp3');
+
+    expect(fileRepository.findOneBy).toHaveBeenCalledWith({ key: 'abc-a.mp3' });
+    expect(settled?.status).toBe('UPLOADED');
+  });
+
+  it('has nothing to say about a key it never handed out', async () => {
+    // Another service's object in the shared bucket. Ordinary, not an error.
+    const { service, fileRepository } = harness();
+    // Set here rather than through `harness`, whose `??` reads a null override
+    // as "not given" and falls back to the stored row.
+    fileRepository.findOneBy.mockResolvedValue(null);
+
+    await expect(
+      service.markUploadedByKey('aether/org-1/x.pdf'),
+    ).resolves.toBeNull();
+  });
+
+  it('leaves a settled row alone rather than writing it again', async () => {
+    /*
+     * At-least-once delivery means this runs more than once for one upload, and
+     * `updatedAt` is an `@UpdateDateColumn` — re-saving would make the file look
+     * freshly changed every time the broker repeated itself.
+     */
+    const { service, fileRepository } = harness({
+      file: { ...stored, status: 'UPLOADED' },
+    });
+
+    await service.markUploadedByKey('abc-a.mp3');
+
+    expect(fileRepository.save).not.toHaveBeenCalled();
+  });
+});

@@ -162,6 +162,34 @@ export class FileService {
     }
 
     /**
+     * Records that the bytes arrived, on the object store's word rather than a
+     * client's.
+     *
+     * For loculus's `object.uploaded`. Keyed rather than by id, and with no
+     * organization, because an event has neither: nobody is asking, and there is
+     * no token behind it to scope by. That is safe where the id-based paths are
+     * not — `key` is unique and loculus minted it, so there is no caller to have
+     * named somebody else's row.
+     *
+     * `null` for a key akouo has no row for. The bucket is shared with every
+     * other service that stores through loculus, so being told about one of
+     * theirs is the ordinary case rather than a problem.
+     *
+     * An already-`UPLOADED` row is returned untouched rather than saved again:
+     * `updatedAt` is an `@UpdateDateColumn`, so re-saving would make the file
+     * look freshly changed every time the broker repeated itself.
+     */
+    async markUploadedByKey(objectKey: string): Promise<StoredFile | null> {
+        const file = await this.fileRepository.findOneBy({ key: objectKey });
+
+        if (!file || file.status === 'UPLOADED') {
+            return file;
+        }
+
+        return this.markUploaded(file);
+    }
+
+    /**
      * A file, but only if it belongs to the organization asking.
      *
      * `findById` deliberately has no such filter: it is reached through a parent
