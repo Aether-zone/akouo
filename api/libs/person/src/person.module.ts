@@ -3,13 +3,14 @@ import { PersonService } from './person.service';
 import { PersonMapper } from './person.mapper';
 import { personProviders } from './person.providers';
 import { PersonController } from './person.controller';
+import { PersonListener } from './person.listener';
 import { MeetingModule } from '@akouo/meeting';
 
 @Module({
   imports: [
     MeetingModule
   ],
-  providers: [...personProviders, PersonService, PersonMapper],
+  providers: [...personProviders, PersonService, PersonMapper, PersonListener],
   exports: [PersonService],
   controllers: [PersonController],
 })

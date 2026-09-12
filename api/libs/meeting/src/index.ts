@@ -5,3 +5,5 @@ export * from './meeting.listener';
 export * from './participant/participant.entity';
 export * from './participant/participant.mapper';
 export * from './entities';
+export * from './meeting.projection';
+export * from './event.listener';

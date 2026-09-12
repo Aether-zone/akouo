@@ -1,7 +1,7 @@
 "use client";
 
 import { FormField } from "@/components/form-field";
-import { Alert, AlertDescription, Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DatePicker, Input, Label } from "@aether-zone/kosmos";
+import { Alert, AlertDescription, Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DatePicker, Input, Label, Autocomplete } from "@aether-zone/kosmos";
 import { TimePicker } from "@akouo/ui";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent, type ReactNode } from "react";
@@ -13,6 +13,7 @@ import {
     toIsoDate,
 } from "@/lib/datetime";
 
+import type { Location } from "@/lib/locations";
 import type { Person } from "@/lib/persons";
 
 import {
@@ -23,6 +24,8 @@ import { ParticipantPicker } from "./participant-picker";
 
 /** The meeting being edited, when there is one. */
 export type EditableMeeting = {
+    /** akouo's own id for the location, or null. Preselects the autocomplete. */
+    locationId?: string | null;
     id: string;
     title: string;
     /** As the API returns it: "YYYY-MM-DD HH:MM", in UTC. */
@@ -43,10 +46,13 @@ const pad = (n: number) => String(n).padStart(2, "0");
 export function MeetingModal({
     trigger,
     persons = [],
+    locations = [],
     meeting,
 }: {
     trigger: (open: () => void) => ReactNode;
     persons?: Person[];
+    /** Sent whole by the page; the autocomplete filters them in the browser. */
+    locations?: Location[];
     meeting?: EditableMeeting;
 }) {
     const router = useRouter();
@@ -58,6 +64,20 @@ export function MeetingModal({
         parseMeetingDate(meeting?.startDate)
     );
     const [time, setTime] = useState(clockOf(meeting?.startDate) ?? "09:00");
+    /*
+     * The location, as the id the api wants and the text the box shows.
+     *
+     * Two pieces of state rather than one, because they can legitimately
+     * disagree: someone typing "sier" has text and no selection yet. The id is
+     * what gets saved, so a half-typed name saves nothing rather than
+     * something wrong.
+     */
+    const [locationId, setLocationId] = useState<string | null>(
+        meeting?.locationId ?? null
+    );
+    const [locationText, setLocationText] = useState(
+        locations.find((l) => l.id === meeting?.locationId)?.name ?? ""
+    );
     const [personIds, setPersonIds] = useState<string[]>(
         meeting?.personIds ?? []
     );
@@ -74,6 +94,10 @@ export function MeetingModal({
         setDate(parseMeetingDate(meeting?.startDate));
         setTime(clockOf(meeting?.startDate) ?? "09:00");
         setPersonIds(meeting?.personIds ?? []);
+        setLocationId(meeting?.locationId ?? null);
+        setLocationText(
+            locations.find((l) => l.id === meeting?.locationId)?.name ?? ""
+        );
         setError(null);
         setTitleError(null);
         setDateError(null);
@@ -110,6 +134,7 @@ export function MeetingModal({
                 title,
                 startDate,
                 personIds,
+                locationId,
             }).catch(
                 // A Server Action rejects if the request itself never lands.
                 (): SaveMeetingResult => ({
@@ -214,6 +239,48 @@ export function MeetingModal({
                                     aria-label="Start time"
                                 />
                             </div>
+
+                            {/* Locations come from topos, by way of the
+                                location events akouo consumes — there is no
+                                way to add one here, so an empty list means
+                                nobody has recorded a place in aether yet. */}
+                            <FormField label="Location">
+                                {(field) => (
+                                    <Autocomplete
+                                        {...field}
+                                        options={locations.map((location) => ({
+                                            value: location.id,
+                                            label: location.name,
+                                        }))}
+                                        value={locationText}
+                                        onValueChange={(text) => {
+                                            setLocationText(text);
+
+                                            /*
+                                             * Typing after a selection means
+                                             * the selection no longer matches
+                                             * what is on screen. Clearing it
+                                             * is what stops a half-edited name
+                                             * saving the previous location.
+                                             */
+                                            if (locationId) {
+                                                setLocationId(null);
+                                            }
+                                        }}
+                                        onSelect={(option) => {
+                                            setLocationId(option.value);
+                                            setLocationText(option.label);
+                                        }}
+                                        placeholder={
+                                            locations.length === 0
+                                                ? "No places recorded in aether yet"
+                                                : "Somewhere, or nowhere"
+                                        }
+                                        disabled={locations.length === 0}
+                                        emptyMessage="No location by that name."
+                                    />
+                                )}
+                            </FormField>
 
                             <ParticipantPicker
                                 persons={persons}

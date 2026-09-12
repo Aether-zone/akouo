@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 
+import type { Location } from "@/lib/locations";
 import type { Person } from "@/lib/persons";
 
 import { MeetingModal } from "./meeting-modal";
@@ -10,9 +11,13 @@ import { MeetingModal } from "./meeting-modal";
 export function CreateMeetingModal({
     trigger,
     persons = [],
+    locations = [],
 }: {
     trigger: (open: () => void) => ReactNode;
     persons?: Person[];
+    locations?: Location[];
 }) {
-    return <MeetingModal trigger={trigger} persons={persons} />;
+    return (
+        <MeetingModal trigger={trigger} persons={persons} locations={locations} />
+    );
 }

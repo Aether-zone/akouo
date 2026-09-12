@@ -3,6 +3,7 @@
 import { Alert, AlertDescription, Button, Text } from "@aether-zone/kosmos";
 
 import type { Meeting } from "@/lib/meetings";
+import type { Location } from "@/lib/locations";
 import type { Person } from "@/lib/persons";
 
 import { MeetingList } from "../meeting-list";
@@ -12,10 +13,12 @@ import { UploadRecordingDialog } from "./upload-recording-dialog";
 export function MeetingsView({
     meetings,
     persons,
+    locations,
     unavailable,
 }: {
     meetings: (Meeting & { formattedDate: string })[];
     persons: Person[];
+    locations: Location[];
     unavailable: boolean;
 }) {
     return (
@@ -37,6 +40,7 @@ export function MeetingsView({
                 <div className="flex items-center gap-2">
                     <UploadRecordingDialog
                         persons={persons}
+                        locations={locations}
                         trigger={(open) => (
                             <Button variant="secondary" onClick={open}>
                                 Upload recording
@@ -44,6 +48,7 @@ export function MeetingsView({
                         )}
                     />
                     <CreateMeetingModal
+                        locations={locations}
                         persons={persons}
                         trigger={(open) => (
                             <Button onClick={open}>Schedule Meeting</Button>
@@ -58,6 +63,7 @@ export function MeetingsView({
                 emptyDescription="Meetings you record or schedule will show up here."
                 emptyAction={
                     <CreateMeetingModal
+                        locations={locations}
                         persons={persons}
                         trigger={(open) => (
                             <Button onClick={open}>Schedule a meeting</Button>

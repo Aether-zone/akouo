@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { formatBytes } from "@/lib/format";
 import { formatMeetingDate, formatMeetingDateLong } from "@/lib/datetime";
 import { getMeeting } from "@/lib/meetings";
+import { getLocations } from "@/lib/locations";
 import { getPersons, namesByPersonId } from "@/lib/persons";
 import { recordingStreamUrl } from "@/lib/recordings";
 import { getRecordings } from "@/lib/recordings.server";
@@ -40,7 +41,12 @@ export default async function MeetingDetailPage({
 
     // Participant rows carry only `personId`, so resolve names from /persons.
     // A failure here degrades to showing the raw ids rather than the page.
-    const personsResult = await getPersons();
+    const [personsResult, locationsResult] = await Promise.all([
+        getPersons(),
+        // The edit modal needs these to show the meeting's location by name;
+        // the meeting itself carries only an id.
+        getLocations(),
+    ]);
     const names = personsResult.ok
         ? namesByPersonId(personsResult.data)
         : new Map<string, string>();
@@ -85,11 +91,20 @@ export default async function MeetingDetailPage({
         size: formatBytes(recording.file?.size ?? 0),
         createdAt: formatMeetingDate(recording.createdAt),
         streamUrl: recordingStreamUrl(meetingId, recording.id!),
+        // A recording has no state of its own — it is the file it points at.
+        status: recording.file?.status,
         transcriptions: (transcriptionsByRecording[index] ?? [])
             .filter((transcription) => transcription.id)
             .map((transcription) => ({
                 id: transcription.id!,
                 label: `Transcription (${formatMeetingDate(transcription.createdAt)})`,
+                /*
+                 * Defaulted rather than optional in the view's type: an
+                 * uncorrected transcript is the overwhelming majority, and a
+                 * missing value means the api did not say — which is the same
+                 * claim.
+                 */
+                origin: transcription.origin ?? "TRANSCRIBED",
                 utterances: (transcription.utterances ?? [])
                     .filter((utterance) => utterance.id)
                     .map((utterance) => {
@@ -127,6 +142,8 @@ export default async function MeetingDetailPage({
 
     return (
         <MeetingDetailView
+            locations={locationsResult.ok ? locationsResult.data : []}
+            locationId={meeting.locationId ?? null}
             id={meetingId}
             title={meeting.title ?? "Untitled meeting"}
             startDate={formatMeetingDateLong(meeting.startDate)}

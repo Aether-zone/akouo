@@ -1,12 +1,13 @@
 "use client";
 
 import { FormField } from "@/components/form-field";
-import { Alert, AlertDescription, Badge, Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, FileUpload, Input, Progress, Text } from "@aether-zone/kosmos";
+import { Alert, AlertDescription, Autocomplete, Badge, Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, FileUpload, Input, Progress, Text } from "@aether-zone/kosmos";
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
 
 import { nowAsApiDateTime } from "@/lib/datetime";
 import { formatBytes } from "@/lib/format";
+import type { Location } from "@/lib/locations";
 import type { Person } from "@/lib/persons";
 import {
     MAX_RECORDING_BYTES,
@@ -58,11 +59,14 @@ export type UploadTargetMeeting = { id?: string; title?: string };
 export function UploadRecordingDialog({
     trigger,
     persons = [],
+    locations = [],
     meeting,
 }: {
     trigger: (open: () => void) => ReactNode;
     /** Only needed when the dialog has to create the meeting. */
     persons?: Person[];
+    /** Likewise: an existing meeting already has a location of its own. */
+    locations?: Location[];
     meeting?: UploadTargetMeeting;
 }) {
     const router = useRouter();
@@ -70,6 +74,14 @@ export function UploadRecordingDialog({
     const [file, setFile] = useState<File | null>(null);
     const [title, setTitle] = useState("");
     const [personIds, setPersonIds] = useState<string[]>([]);
+    /*
+     * The location, as the id the api wants and the text the box shows. Two
+     * pieces of state because they legitimately disagree while someone types:
+     * the id is what gets saved, so a half-typed name saves nothing rather
+     * than something wrong.
+     */
+    const [locationId, setLocationId] = useState<string | null>(null);
+    const [locationText, setLocationText] = useState("");
     const [phase, setPhase] = useState<Phase>("idle");
     const [progress, setProgress] = useState(0);
     const [error, setError] = useState<string | null>(null);
@@ -91,6 +103,8 @@ export function UploadRecordingDialog({
         setFile(null);
         setTitle("");
         setPersonIds([]);
+        setLocationId(null);
+        setLocationText("");
         setPhase("idle");
         setProgress(0);
         setError(null);
@@ -143,6 +157,7 @@ export function UploadRecordingDialog({
                 // The recording is of a meeting that just happened.
                 startDate: nowAsApiDateTime(),
                 personIds,
+                locationId,
             }).catch(
                 // A Server Action rejects if the request itself never lands.
                 (): ScheduleMeetingResult => ({
@@ -304,6 +319,58 @@ export function UploadRecordingDialog({
                                                 }
                                                 placeholder="Weekly sync"
                                                 disabled={busy}
+                                            />
+                                        )}
+                                    </FormField>
+
+                                    {/* Locations come from topos, by way of
+                                        the place events akouo consumes — there
+                                        is no way to add one here, so an empty
+                                        list means nobody has recorded a place
+                                        in aether yet. */}
+                                    <FormField label="Location">
+                                        {(field) => (
+                                            <Autocomplete
+                                                {...field}
+                                                options={locations.map(
+                                                    (location) => ({
+                                                        value: location.id,
+                                                        label: location.name,
+                                                    })
+                                                )}
+                                                value={locationText}
+                                                onValueChange={(text) => {
+                                                    setLocationText(text);
+
+                                                    /*
+                                                     * Typing after a selection
+                                                     * means the selection no
+                                                     * longer matches what is
+                                                     * on screen. Clearing it
+                                                     * stops a half-edited name
+                                                     * saving the previous
+                                                     * location.
+                                                     */
+                                                    if (locationId) {
+                                                        setLocationId(null);
+                                                    }
+                                                }}
+                                                onSelect={(option) => {
+                                                    setLocationId(option.value);
+                                                    setLocationText(
+                                                        option.label
+                                                    );
+                                                }}
+                                                placeholder={
+                                                    locations.length === 0
+                                                        ? "No places recorded in aether yet"
+                                                        : "Where it happened"
+                                                }
+                                                disabled={
+                                                    busy ||
+                                                    locations.length === 0
+                                                }
+                                                emptyMessage="No location by that name."
                                             />
                                         )}
                                     </FormField>

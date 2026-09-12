@@ -43,6 +43,15 @@
         "tsConfigPath": "libs/extraction/tsconfig.lib.json"
       }
     },
+    "location": {
+      "type": "library",
+      "root": "libs/location",
+      "entryFile": "index",
+      "sourceRoot": "libs/location/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/location/tsconfig.lib.json"
+      }
+    },
     "meeting": {
       "type": "library",
       "root": "libs/meeting",

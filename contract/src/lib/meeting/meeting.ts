@@ -11,6 +11,14 @@ export const createMeetingSchema = z
     startDate: IsoDateTime.describe('When the meeting starts, in UTC'),
     endDate: IsoDateTime.describe('When the meeting ends, in UTC').optional(),
     participants: z.array(createParticipantSchema),
+    /**
+     * Where it is, if anywhere.
+     *
+     * Optional because plenty of meetings have no place — a call is not
+     * somewhere. Null clears one that was set; absent leaves it alone, which
+     * is the distinction `updateMeetingSchema` relies on.
+     */
+    locationId: z.uuid().nullable().optional(),
   })
   .refine(
     (meeting) =>
@@ -30,6 +38,8 @@ export const updateMeetingSchema = z.object({
   status: meetingStatusSchema.optional(),
   /** The whole set, when sent: whoever is missing from it is taken off. */
   participants: z.array(createParticipantSchema).optional(),
+  /** `null` clears the location; absent leaves it as it is. */
+  locationId: z.uuid().nullable().optional(),
 });
 
 export const meetingSchema = auditedSchema.extend({
@@ -38,6 +48,20 @@ export const meetingSchema = auditedSchema.extend({
   endDate: IsoDateTime.optional(),
   status: meetingStatusSchema.default('INITIAL'),
   participants: z.array(participantSchema),
+  /** Where it is, or null. akouo's own id for the location, not the place IRI. */
+  locationId: z.uuid().nullable(),
+  /**
+   * The IRI the *workspace* knows that location by — what a published meeting
+   * document references.
+   *
+   * Not derivable from `locationId`: akouo's row id is a different identifier
+   * for the same place, and a document naming it would point at a node nobody
+   * else has. Exactly the distinction `personUri` draws on a participant.
+   *
+   * Null when there is no location, or when topos has deleted the place it
+   * came from — an unlinked location has no IRI to give.
+   */
+  locationUri: z.string().nullable(),
 });
 
 export type CreateMeetingDTO = z.infer<typeof createMeetingSchema>;
