@@ -277,8 +277,8 @@ importers:
         specifier: ^4.3.3
         version: 4.3.3
       typescript:
-        specifier: ^5.7.3
-        version: 5.9.3
+        specifier: ^6.0.3
+        version: 6.0.3
       vite:
         specifier: ^6.0.7
         version: 6.4.3(@types/node@24.13.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)
@@ -296,8 +296,8 @@ importers:
         specifier: ^4.3.3
         version: 4.3.3
       typescript:
-        specifier: ^5.7.3
-        version: 5.9.3
+        specifier: ^6.0.3
+        version: 6.0.3
 
   packages/ui:
     dependencies:
@@ -313,10 +313,10 @@ importers:
         version: 8.6.14(@types/react@19.3.0)(storybook@8.6.18(prettier@3.6.2))
       '@storybook/react':
         specifier: ^8.6.0
-        version: 8.6.18(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(storybook@8.6.18(prettier@3.6.2))(typescript@5.9.3)
+        version: 8.6.18(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(storybook@8.6.18(prettier@3.6.2))(typescript@6.0.3)
       '@storybook/react-vite':
         specifier: ^8.6.0
-        version: 8.6.18(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rollup@4.63.1)(storybook@8.6.18(prettier@3.6.2))(typescript@5.9.3)(vite@6.4.3(@types/node@24.13.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2))
+        version: 8.6.18(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rollup@4.63.1)(storybook@8.6.18(prettier@3.6.2))(typescript@6.0.3)(vite@6.4.3(@types/node@24.13.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2))
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@6.4.3(@types/node@24.13.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2))
@@ -345,8 +345,8 @@ importers:
         specifier: ^4.3.3
         version: 4.3.3
       typescript:
-        specifier: ^5.7.3
-        version: 5.9.3
+        specifier: ^6.0.3
+        version: 6.0.3
       vite:
         specifier: ^6.0.0
         version: 6.4.3(@types/node@24.13.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)
@@ -400,8 +400,8 @@ importers:
         specifier: ^4.3.3
         version: 4.3.3
       typescript:
-        specifier: ^5.7.3
-        version: 5.9.3
+        specifier: ^6.0.3
+        version: 6.0.3
 
 packages:
 
@@ -6809,11 +6809,6 @@ packages:
       eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
       typescript: '>=4.8.4 <6.1.0'
 
-  typescript@5.9.3:
-    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
-    engines: {node: '>=14.17'}
-    hasBin: true
-
   typescript@6.0.3:
     resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
     engines: {node: '>=14.17'}
@@ -8129,14 +8124,14 @@ snapshots:
       '@types/yargs': 17.0.35
       chalk: 4.1.2
 
-  '@joshwooding/vite-plugin-react-docgen-typescript@0.5.0(typescript@5.9.3)(vite@6.4.3(@types/node@24.13.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2))':
+  '@joshwooding/vite-plugin-react-docgen-typescript@0.5.0(typescript@6.0.3)(vite@6.4.3(@types/node@24.13.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2))':
     dependencies:
       glob: 10.5.0
       magic-string: 0.27.0
-      react-docgen-typescript: 2.4.0(typescript@5.9.3)
+      react-docgen-typescript: 2.4.0(typescript@6.0.3)
       vite: 6.4.3(@types/node@24.13.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)
     optionalDependencies:
-      typescript: 5.9.3
+      typescript: 6.0.3
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
@@ -9016,12 +9011,12 @@ snapshots:
       react-dom: 19.3.0(react@19.3.0)
       storybook: 8.6.18(prettier@3.6.2)
 
-  '@storybook/react-vite@8.6.18(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rollup@4.63.1)(storybook@8.6.18(prettier@3.6.2))(typescript@5.9.3)(vite@6.4.3(@types/node@24.13.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2))':
+  '@storybook/react-vite@8.6.18(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(rollup@4.63.1)(storybook@8.6.18(prettier@3.6.2))(typescript@6.0.3)(vite@6.4.3(@types/node@24.13.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2))':
     dependencies:
-      '@joshwooding/vite-plugin-react-docgen-typescript': 0.5.0(typescript@5.9.3)(vite@6.4.3(@types/node@24.13.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2))
+      '@joshwooding/vite-plugin-react-docgen-typescript': 0.5.0(typescript@6.0.3)(vite@6.4.3(@types/node@24.13.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2))
       '@rollup/pluginutils': 5.4.0(rollup@4.63.1)
       '@storybook/builder-vite': 8.6.18(storybook@8.6.18(prettier@3.6.2))(vite@6.4.3(@types/node@24.13.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2))
-      '@storybook/react': 8.6.18(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(storybook@8.6.18(prettier@3.6.2))(typescript@5.9.3)
+      '@storybook/react': 8.6.18(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(storybook@8.6.18(prettier@3.6.2))(typescript@6.0.3)
       find-up: 5.0.0
       magic-string: 0.30.21
       react: 19.3.0
@@ -9036,7 +9031,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@storybook/react@8.6.18(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(storybook@8.6.18(prettier@3.6.2))(typescript@5.9.3)':
+  '@storybook/react@8.6.18(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(storybook@8.6.18(prettier@3.6.2))(typescript@6.0.3)':
     dependencies:
       '@storybook/components': 8.6.18(storybook@8.6.18(prettier@3.6.2))
       '@storybook/global': 5.0.0
@@ -9048,7 +9043,7 @@ snapshots:
       react-dom: 19.3.0(react@19.3.0)
       storybook: 8.6.18(prettier@3.6.2)
     optionalDependencies:
-      typescript: 5.9.3
+      typescript: 6.0.3
 
   '@storybook/theming@8.6.18(storybook@8.6.18(prettier@3.6.2))':
     dependencies:
@@ -13459,9 +13454,9 @@ snapshots:
       iconv-lite: 0.7.3
       unpipe: 1.0.0
 
-  react-docgen-typescript@2.4.0(typescript@5.9.3):
+  react-docgen-typescript@2.4.0(typescript@6.0.3):
     dependencies:
-      typescript: 5.9.3
+      typescript: 6.0.3
 
   react-docgen@7.1.1:
     dependencies:
@@ -14460,8 +14455,6 @@ snapshots:
       typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
-
-  typescript@5.9.3: {}
 
   typescript@6.0.3: {}
 
